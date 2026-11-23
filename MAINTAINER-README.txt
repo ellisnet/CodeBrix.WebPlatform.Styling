@@ -182,13 +182,15 @@ depend on that exact version.
 Versions: every packable csproj carries the family's canonical date-stamped
 version block (1.<years since 2026>.<day of year>.<minute of day>, UTC). The
 platform packages depend on the .Sources package at exactly the version built
-beside them ([version]); PinTailwindSourcesVersion in the shared targets turns
-NuGet's usual "this version or later" into that exact range. NuGet reads that
-version by evaluating the .Sources project again, so a build that crosses a
-UTC minute boundary could name a version that was never packed: the build then
-STOPS ("... the build crossed a minute boundary. Build again.") rather than
-pack a package whose dependency cannot be found. Note that NuGet writes a
-version whose last part is 0 without it (1.0.327.0 is 1.0.327).
+beside them ([version]). NuGet would write "this version or later", and it
+reads that version by evaluating the .Sources project a second time - which,
+on a slow build such as the first one after a clone (the downloads), can fall
+in a later minute than the .Sources package was packed in.
+PinTailwindSourcesVersion in the shared targets therefore takes the version
+from the .Sources assembly the same build compiled (the .Sources project packs
+in the evaluation that compiled it, so that is the packed version), makes it
+the exact range, and checks that the package file exists. Note that NuGet
+writes a version whose last part is 0 without it (1.0.327.0 is 1.0.327).
 
 Before publishing:
   1. the build and the tests are green (0 warnings);

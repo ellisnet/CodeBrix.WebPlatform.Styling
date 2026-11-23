@@ -111,34 +111,45 @@
 
   <!--
     Every platform package depends on the .Sources package at ONE EXACT version - the one built
-    beside it - so that a program always comes with its own source. NuGet writes a project
-    reference as "this version or later"; this turns the version of the .Sources reference into
-    the exact range [version].
+    beside it - so that a program always comes with its own source.
+
+    NuGet writes a project reference as "this version or later", and it reads that version by
+    evaluating the .Sources project AGAIN. The version is stamped from the clock, so on a slow
+    build (the first build of a clone downloads some 500 MB) that second evaluation can land in a
+    later UTC minute and name a .Sources version that was never packed. So the version is taken
+    instead from the .Sources assembly this build compiled: the .Sources project packs in the same
+    evaluation that compiled it (pack runs after build, in the same project instance), so the
+    assembly's version IS the packed package's version. It becomes the exact range [version].
   -->
   <Target Name="PinTailwindSourcesVersion" AfterTargets="_GetProjectReferenceVersions">
     <ItemGroup>
       <_TailwindSourcesReference Include="@(_ProjectReferencesWithVersions)"
                                  Condition="'%(Filename)' == 'CodeBrix.WebPlatform.Styling.Tailwind4.Sources'" />
-      <_ProjectReferencesWithVersions Remove="@(_TailwindSourcesReference)" />
-      <_ProjectReferencesWithVersions Include="@(_TailwindSourcesReference)" ProjectVersion="[%(_TailwindSourcesReference.ProjectVersion)]" />
+      <_TailwindSourcesAssembly Include="@(_ResolvedProjectReferencePaths)"
+                                Condition="'%(Filename)' == 'CodeBrix.WebPlatform.Styling.Tailwind4.Sources'" />
     </ItemGroup>
     <Error Condition="'@(_TailwindSourcesReference)' == ''" Text="The project reference to CodeBrix.WebPlatform.Styling.Tailwind4.Sources was not found; the package would not depend on its source." />
+    <Error Condition="'@(_TailwindSourcesAssembly)' == ''" Text="The CodeBrix.WebPlatform.Styling.Tailwind4.Sources assembly of this build was not found; pack the platform packages with a build (dotnet build), not with dotnet pack --no-build." />
 
-    <!--
-      NuGet reads that version by evaluating the .Sources project again, and the version is
-      stamped from the clock, so a build that crosses a UTC minute boundary could name a .Sources
-      version that was never packed. Refuse to pack then, rather than publish a package whose
-      dependency cannot be found.
-    -->
+    <GetAssemblyIdentity AssemblyFiles="@(_TailwindSourcesAssembly)">
+      <Output TaskParameter="Assemblies" ItemName="_TailwindSourcesIdentity" />
+    </GetAssemblyIdentity>
     <PropertyGroup>
-      <_TailwindSourcesVersion>@(_TailwindSourcesReference->'%(ProjectVersion)'->Replace('[', '')->Replace(']', ''))</_TailwindSourcesVersion>
+      <_TailwindSourcesVersion>%(_TailwindSourcesIdentity.Version)</_TailwindSourcesVersion>
       <!-- NuGet names the file with the normalized version: a revision of 0 is dropped (1.0.327.0 -> 1.0.327). -->
       <_TailwindSourcesFileVersion>$(_TailwindSourcesVersion)</_TailwindSourcesFileVersion>
       <_TailwindSourcesFileVersion Condition="$(_TailwindSourcesVersion.Split('.').Length) == 4 And $(_TailwindSourcesVersion.EndsWith('.0'))">$(_TailwindSourcesVersion.Substring(0, $([MSBuild]::Subtract($(_TailwindSourcesVersion.Length), 2))))</_TailwindSourcesFileVersion>
       <_TailwindSourcesPackage>$([System.IO.Path]::Combine('$(MSBuildThisFileDirectory)', 'CodeBrix.WebPlatform.Styling.Tailwind4.Sources', 'bin', '$(Configuration)', 'CodeBrix.WebPlatform.Styling.Tailwind4.Sources.$(_TailwindSourcesFileVersion).nupkg'))</_TailwindSourcesPackage>
     </PropertyGroup>
+
+    <ItemGroup>
+      <_ProjectReferencesWithVersions Remove="@(_TailwindSourcesReference)" />
+      <_ProjectReferencesWithVersions Include="@(_TailwindSourcesReference)" ProjectVersion="[$(_TailwindSourcesVersion)]" />
+    </ItemGroup>
+
+    <!-- A last check that the package this one depends on really was written. -->
     <Error Condition="!Exists('$(_TailwindSourcesPackage)')"
-           Text="This package would depend on CodeBrix.WebPlatform.Styling.Tailwind4.Sources $(_TailwindSourcesVersion), but that version was not packed ($(_TailwindSourcesPackage) does not exist) - the build crossed a minute boundary. Build again." />
+           Text="This package would depend on CodeBrix.WebPlatform.Styling.Tailwind4.Sources $(_TailwindSourcesVersion), but $(_TailwindSourcesPackage) does not exist. Build the solution again." />
   </Target>
 
 </Project>

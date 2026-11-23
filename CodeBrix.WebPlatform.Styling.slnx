@@ -1,0 +1,23 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".gitignore" />
+    <File Path="AGENT-README.txt" />
+    <File Path="EXTRAS-README.txt" />
+    <File Path="global.json" />
+    <File Path="icon-codebrix-128.png" />
+    <File Path="LICENSE" />
+    <File Path="MAINTAINER-README.txt" />
+    <File Path="README-INDEX.txt" />
+    <File Path="README.md" />
+    <File Path="THIRD-PARTY-NOTICES.txt" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="tests/CodeBrix.WebPlatform.Styling.Tests/CodeBrix.WebPlatform.Styling.Tests.csproj" />
+  </Folder>
+  <Project Path="src/CodeBrix.WebPlatform.Styling.Tailwind4.Sources/CodeBrix.WebPlatform.Styling.Tailwind4.Sources.csproj" />
+  <Project Path="src/CodeBrix.WebPlatform.Styling.Tailwind4.LinuxX64/CodeBrix.WebPlatform.Styling.Tailwind4.LinuxX64.csproj" />
+  <Project Path="src/CodeBrix.WebPlatform.Styling.Tailwind4.LinuxArm64/CodeBrix.WebPlatform.Styling.Tailwind4.LinuxArm64.csproj" />
+  <Project Path="src/CodeBrix.WebPlatform.Styling.Tailwind4.MacOSX64/CodeBrix.WebPlatform.Styling.Tailwind4.MacOSX64.csproj" />
+  <Project Path="src/CodeBrix.WebPlatform.Styling.Tailwind4.MacOSArm64/CodeBrix.WebPlatform.Styling.Tailwind4.MacOSArm64.csproj" />
+  <Project Path="src/CodeBrix.WebPlatform.Styling.Tailwind4.WindowsX64/CodeBrix.WebPlatform.Styling.Tailwind4.WindowsX64.csproj" />
+</Solution>

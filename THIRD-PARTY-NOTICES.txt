@@ -1,0 +1,106 @@
+THIRD-PARTY SOFTWARE NOTICES AND INFORMATION
+
+CodeBrix.WebPlatform.Styling packages the prebuilt standalone Tailwind CSS
+program for the five build platforms of CodeBrix.WebPlatform, and the source
+of that program. Its own code - five tiny assemblies that name the program and
+find it, one that lists the source archives, and the MSBuild files that
+download, check and pack - incorporates no third-party source code.
+
+The packages REDISTRIBUTE third-party software, unchanged. This file says what
+and under which licences; the complete inventory of the code inside the
+program, with every licence text, is THIRD-PARTY-NOTICES-Tailwind.txt, which
+travels beside the program in every platform package (in this repository:
+src/notices/THIRD-PARTY-NOTICES-Tailwind.txt).
+
+Jeremy Ellis and contributors license the CodeBrix.WebPlatform.Styling project
+to you under the terms set forth in the LICENSE file, which is located at the
+root of this repository. Those terms cover this project's own files only; the
+third-party software below stays under its own licences.
+
+If you have any questions about any third-party code referenced here, or if
+you believe that any third-party code has been included in
+CodeBrix.WebPlatform.Styling in error, please open a new issue at:
+https://github.com/ellisnet/CodeBrix.WebPlatform.Styling/issues
+
+================================================================================
+
+1. THE STANDALONE TAILWIND CSS PROGRAMS
+   (in the CodeBrix.WebPlatform.Styling.Tailwind4.<Platform> packages)
+
+   What:      tailwindcss-linux-x64, tailwindcss-linux-arm64,
+              tailwindcss-macos-x64, tailwindcss-macos-arm64 and
+              tailwindcss-windows-x64.exe of the Tailwind CSS v4.3.5 release,
+              https://github.com/tailwindlabs/tailwindcss/releases/tag/v4.3.5
+              - downloaded when the packages are built (never committed),
+              checked against their published sha256 values, and packed
+              unchanged as tools/tailwind/<rid>/tailwindcss[.exe].
+   Copyright: Copyright (c) Tailwind Labs, Inc.
+   License:   MIT (src/notices/LICENSE-Tailwind.txt, packed beside the program
+              as LICENSE-Tailwind.txt).
+
+   Each program is a `bun build --compile` executable: the Bun runtime (Bun
+   v1.4.3), with Tailwind's JavaScript and its native add-ons embedded. It
+   therefore also contains code under other licences, among them:
+     - JavaScriptCore, WTF and bmalloc from Bun's WebKit fork (BSD-2-Clause
+       and GNU LGPL; one compiled-in file, Source/WTF/wtf/text/Base64.cpp, is
+       LGPL version 2 only);
+     - TinyCC from Bun's TinyCC fork (GNU LGPL 2.1 or later);
+     - files in Bun copied from WebKit's WebCore (GNU LGPL 2.0 or later);
+     - in the x86-64 executables, the source text of TinyCC's runtime library
+       libtcc1.c (GPL-2.0-or-later with the GCC linking exception);
+     - Lightning CSS, several Rust crates, a few WebKit files and Bun's CSS
+       engine (MPL-2.0);
+     - the libraries Bun links and the packages and crates Tailwind bundles
+       (MIT, BSD, Apache-2.0, zlib, ICU and other permissive licences, and
+       CC-BY-4.0 for the caniuse browser data).
+   THIRD-PARTY-NOTICES-Tailwind.txt lists every component with its licence
+   text and says where its source is.
+
+   SOURCE: the complete source of the programs - the source of the LGPL
+   libraries, and the source of Bun and Tailwind needed to relink against a
+   changed library - is published with the programs, on nuget.org, in the
+   CodeBrix.WebPlatform.Styling.Tailwind4.Sources package. Every platform
+   package depends on that package at one exact version. The same archives
+   are committed in this repository in info/v4.3.5/ (item 2).
+
+--------------------------------------------------------------------------------
+
+2. THE SOURCE ARCHIVES
+   (info/v4.3.5/; in the CodeBrix.WebPlatform.Styling.Tailwind4.Sources
+   package under sources/v4.3.5/)
+
+   tailwindcss-4.3.5.zip
+       Tailwind CSS at tag v4.3.5, https://github.com/tailwindlabs/tailwindcss
+       - GitHub's tag zip, unchanged. MIT (Tailwind Labs, Inc.);
+       crates/ignore: Unlicense or MIT.
+   oven-sh-bun-v1.4.3.zip
+       Bun at tag bun-v1.4.3, https://github.com/oven-sh/bun, without its
+       test/, docs/ and bench/ folders. MIT (Oven and Bun contributors), with
+       LGPL-2.0-or-later files from WebKit and the licences listed in its
+       LICENSE.md.
+   oven-sh-WebKit-0c06faad-JSCOnly.zip
+       The parts of Bun's WebKit fork that Bun's build compiles (CMakeLists.txt,
+       Source/CMakeLists.txt, Source/cmake, Source/bmalloc, Source/WTF,
+       Source/JavaScriptCore, Source/ThirdParty/unifdef) at commit
+       0c06faadf65bf8e8c8ad3a5a8aca83e1e9ed653f,
+       https://github.com/oven-sh/WebKit. BSD-2-Clause and LGPL as each file
+       states (see SOURCES-LICENSES.txt).
+   oven-sh-tinycc-05f0fafa.zip
+       Bun's TinyCC fork at commit 05f0fafaa3be31e31d7b4b5c17dc60f62c991171,
+       https://github.com/oven-sh/tinycc. LGPL-2.1-or-later.
+
+   The archives are the original source, unchanged; the three oven-sh archives
+   were repacked as deterministic zips (info/v4.3.5/SOURCES-README.txt says
+   exactly how) and contain the upstream licence files.
+
+--------------------------------------------------------------------------------
+
+3. sha256sums.txt
+   (info/v4.3.5/)
+
+   The checksum file of the Tailwind CSS v4.3.5 release, as published by
+   Tailwind Labs, Inc. Reference data, not packed.
+
+================================================================================
+
+END OF THIRD-PARTY SOFTWARE NOTICES AND INFORMATION

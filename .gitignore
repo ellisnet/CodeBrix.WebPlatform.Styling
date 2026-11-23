@@ -424,3 +424,8 @@ FodyWeavers.xsd
 
 # Official VS Code C# Dev Kit Extension exclusion
 #*.lscache
+
+# The prebuilt Tailwind programs the platform packages carry. The build downloads them from the
+# Tailwind release into Downloaded/<version>/ and checks their sha256 hashes before packing
+# (MAINTAINER-README.txt, PACKAGING); they are never committed.
+/Downloaded/

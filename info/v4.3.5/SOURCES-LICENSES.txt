@@ -1,0 +1,41 @@
+LICENCES OF THE SOURCE ARCHIVES IN CodeBrix.WebPlatform.Styling.Tailwind4.Sources
+================================================================================
+
+This package carries source archives (under sources/v4.3.5/) and no program.
+Each archive keeps the licences of the code in it; this package adds no licence
+of its own to that code and changes none. The full licence texts and copyright
+notices are inside each archive, in the files named below, and in
+THIRD-PARTY-NOTICES-Tailwind.txt beside the program in every platform package.
+sources/v4.3.5/SOURCES-README.txt says exactly what each archive holds.
+
+  tailwindcss-4.3.5.zip
+      Tailwind CSS. MIT License (LICENSE). crates/ignore: Unlicense or MIT.
+
+  oven-sh-bun-v1.4.3.zip
+      The Bun runtime. MIT License (LICENSE.md), which also lists the
+      libraries Bun links and their licences. Files copied from WebKit's
+      WebCore (src/jsc/bindings/webcore, src/jsc/bindings/webcrypto and
+      others) are under the GNU Library General Public License, version 2 or
+      any later version, as their headers state.
+
+  oven-sh-WebKit-0c06faad-JSCOnly.zip
+      JavaScriptCore, WTF and bmalloc from Bun's WebKit fork. Each file is
+      under the licence its header states: mostly the BSD 2-Clause License
+      (Apple Inc.); many files under the GNU Library General Public License,
+      version 2 or any later version (Source/JavaScriptCore/COPYING.LIB);
+      Source/WTF/wtf/text/Base64.cpp under the GNU Lesser General Public
+      License version 2 only; Source/WTF/wtf/DateMath.h and
+      Source/JavaScriptCore/runtime/JSDateMath.h under the Mozilla Public
+      License 1.1, the GNU General Public License version 2 or later, or the
+      GNU Lesser General Public License version 2.1 or later, at the
+      recipient's choice.
+
+  oven-sh-tinycc-05f0fafa.zip
+      TinyCC (Tiny C Compiler) from Bun's fork. GNU Lesser General Public
+      License, version 2.1 or any later version (COPYING), with the notices in
+      the individual files.
+
+The packaging of these archives (the package's small assembly, its README.md
+and its other text files) is Copyright (c) 2026 Jeremy Ellis and contributors
+and licensed under the MIT License:
+https://github.com/ellisnet/CodeBrix.WebPlatform.Styling/blob/main/LICENSE

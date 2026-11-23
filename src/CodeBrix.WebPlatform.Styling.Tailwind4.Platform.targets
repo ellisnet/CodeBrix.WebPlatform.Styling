@@ -1,0 +1,144 @@
+<Project>
+
+  <!--
+    Shared by the five platform projects (CodeBrix.WebPlatform.Styling.Tailwind4.<Platform>). Each
+    project sets, before importing this file:
+
+      TailwindRuntimeIdentifier    linux-x64, linux-arm64, osx-x64, osx-arm64 or win-x64
+      TailwindReleaseFileName      the file name in the Tailwind release (tailwindcss-linux-x64, ...)
+      TailwindReleaseUrl           where that file is downloaded from
+      TailwindSha256               the sha256 of that file (lower-case hex)
+      TailwindExecutableFileName   tailwindcss, or tailwindcss.exe on Windows
+
+    Before every build (and so before every pack - the projects pack on build), the
+    PrepareTailwindProgram target below:
+
+      1. creates <repository>/Downloaded/v<version>/ when it does not exist;
+      2. downloads the release file into it when it is missing - to a ".partial" name first, which
+         is checked and only then renamed, so a failed or partial download never takes the real
+         name;
+      3. checks the sha256 of the file in Downloaded/v<version>/ - just downloaded or not - and
+         stops the build when it does not match;
+      4. copies it, renamed to TailwindExecutableFileName, into obj/.../tailwind/<rid>/ with a
+         version.txt holding the Tailwind version, from where both are packed into
+         tools/tailwind/<rid>/ and copied into this project's output folder as tailwind/<rid>/.
+
+    Nothing else in Downloaded/ is looked at. Downloaded/ is git-ignored.
+  -->
+  <PropertyGroup>
+    <TailwindVersion>4.3.5</TailwindVersion>
+    <TailwindRepositoryRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..'))</TailwindRepositoryRoot>
+    <TailwindDownloadDirectory>$([System.IO.Path]::Combine('$(TailwindRepositoryRoot)', 'Downloaded', 'v$(TailwindVersion)'))</TailwindDownloadDirectory>
+    <TailwindDownloadedFile>$([System.IO.Path]::Combine('$(TailwindDownloadDirectory)', '$(TailwindReleaseFileName)'))</TailwindDownloadedFile>
+    <TailwindNoticesDirectory>$([System.IO.Path]::Combine('$(MSBuildThisFileDirectory)', 'notices'))</TailwindNoticesDirectory>
+  </PropertyGroup>
+
+  <!-- The values the build used, recorded in the assembly so the tests can compare them with the TailwindTool constants. -->
+  <ItemGroup>
+    <AssemblyMetadata Include="TailwindVersion" Value="$(TailwindVersion)" />
+    <AssemblyMetadata Include="TailwindRuntimeIdentifier" Value="$(TailwindRuntimeIdentifier)" />
+    <AssemblyMetadata Include="TailwindReleaseFileName" Value="$(TailwindReleaseFileName)" />
+    <AssemblyMetadata Include="TailwindReleaseUrl" Value="$(TailwindReleaseUrl)" />
+    <AssemblyMetadata Include="TailwindSha256" Value="$(TailwindSha256)" />
+    <AssemblyMetadata Include="TailwindExecutableFileName" Value="$(TailwindExecutableFileName)" />
+  </ItemGroup>
+
+  <!--
+    The licence and notices files of the program travel beside it, in the package and in the
+    output folder. They are named after Tailwind so that they cannot collide with another
+    package's files in a consuming application's output folder.
+  -->
+  <ItemGroup>
+    <None Include="$(TailwindNoticesDirectory)\LICENSE-Tailwind.txt;$(TailwindNoticesDirectory)\THIRD-PARTY-NOTICES-Tailwind.txt"
+          Pack="true" PackagePath="tools\tailwind\$(TailwindRuntimeIdentifier)\"
+          Link="tailwind\$(TailwindRuntimeIdentifier)\%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" Visible="false" />
+    <None Include="$(MSBuildThisFileDirectory)CodeBrix.WebPlatform.Styling.Tailwind4.buildTransitive.targets"
+          Pack="true" PackagePath="buildTransitive\$(PackageId).targets" Visible="false" />
+  </ItemGroup>
+
+  <Target Name="PrepareTailwindProgram" BeforeTargets="BeforeBuild">
+    <PropertyGroup>
+      <_TailwindPartialFile>$(TailwindDownloadedFile).partial</_TailwindPartialFile>
+      <_TailwindStagingDirectory>$([System.IO.Path]::Combine('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'tailwind', '$(TailwindRuntimeIdentifier)'))</_TailwindStagingDirectory>
+      <_TailwindStagedFile>$([System.IO.Path]::Combine('$(_TailwindStagingDirectory)', '$(TailwindExecutableFileName)'))</_TailwindStagedFile>
+      <_TailwindNeedsDownload>false</_TailwindNeedsDownload>
+      <_TailwindNeedsDownload Condition="!Exists('$(TailwindDownloadedFile)')">true</_TailwindNeedsDownload>
+    </PropertyGroup>
+
+    <MakeDir Directories="$(TailwindDownloadDirectory)" />
+
+    <!-- 2. Download a missing file, under the .partial name. -->
+    <Message Importance="high" Condition="'$(_TailwindNeedsDownload)' == 'true'"
+             Text="Downloading $(TailwindReleaseUrl) into $(TailwindDownloadDirectory) ..." />
+    <Delete Files="$(_TailwindPartialFile)" Condition="'$(_TailwindNeedsDownload)' == 'true'" />
+    <DownloadFile Condition="'$(_TailwindNeedsDownload)' == 'true'"
+                  SourceUrl="$(TailwindReleaseUrl)"
+                  DestinationFolder="$(TailwindDownloadDirectory)"
+                  DestinationFileName="$(TailwindReleaseFileName).partial"
+                  Retries="3" RetryDelayMilliseconds="5000" />
+    <GetFileHash Condition="'$(_TailwindNeedsDownload)' == 'true'" Files="$(_TailwindPartialFile)" Algorithm="SHA256" HashEncoding="hex">
+      <Output TaskParameter="Hash" PropertyName="_TailwindPartialHash" />
+    </GetFileHash>
+    <Delete Condition="'$(_TailwindNeedsDownload)' == 'true' And '$(_TailwindPartialHash.ToLowerInvariant())' != '$(TailwindSha256.ToLowerInvariant())'"
+            Files="$(_TailwindPartialFile)" />
+    <Error Condition="'$(_TailwindNeedsDownload)' == 'true' And '$(_TailwindPartialHash.ToLowerInvariant())' != '$(TailwindSha256.ToLowerInvariant())'"
+           Text="The file downloaded from $(TailwindReleaseUrl) has sha256 $(_TailwindPartialHash.ToLowerInvariant()); $(TailwindSha256) was expected. The download was deleted; nothing was packed." />
+    <Move Condition="'$(_TailwindNeedsDownload)' == 'true'" SourceFiles="$(_TailwindPartialFile)" DestinationFiles="$(TailwindDownloadedFile)" />
+
+    <!-- 3. Check the file in Downloaded/, whether it was just downloaded or was already there. -->
+    <GetFileHash Files="$(TailwindDownloadedFile)" Algorithm="SHA256" HashEncoding="hex">
+      <Output TaskParameter="Hash" PropertyName="_TailwindHash" />
+    </GetFileHash>
+    <Error Condition="'$(_TailwindHash.ToLowerInvariant())' != '$(TailwindSha256.ToLowerInvariant())'"
+           Text="$(TailwindDownloadedFile) has sha256 $(_TailwindHash.ToLowerInvariant()); $(TailwindSha256) was expected. Delete the file - the next build downloads it again - and check the URL and hash in $(MSBuildProjectFile) if it fails again. Nothing was packed." />
+
+    <!-- 4. Rename it into the staging folder and hand it to pack and to the output copy. -->
+    <Copy SourceFiles="$(TailwindDownloadedFile)" DestinationFiles="$(_TailwindStagedFile)" SkipUnchangedFiles="true" />
+    <WriteLinesToFile File="$(_TailwindStagingDirectory)$([System.IO.Path]::DirectorySeparatorChar)version.txt" Lines="$(TailwindVersion)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <!-- (No %(...) metadata here: inside a target it would batch over every other None item.) -->
+    <ItemGroup>
+      <None Include="$(_TailwindStagedFile)"
+            Pack="true" PackagePath="tools\tailwind\$(TailwindRuntimeIdentifier)\"
+            Link="tailwind\$(TailwindRuntimeIdentifier)\$(TailwindExecutableFileName)"
+            CopyToOutputDirectory="PreserveNewest" Visible="false" />
+      <None Include="$(_TailwindStagingDirectory)$([System.IO.Path]::DirectorySeparatorChar)version.txt"
+            Pack="true" PackagePath="tools\tailwind\$(TailwindRuntimeIdentifier)\"
+            Link="tailwind\$(TailwindRuntimeIdentifier)\version.txt"
+            CopyToOutputDirectory="PreserveNewest" Visible="false" />
+    </ItemGroup>
+  </Target>
+
+  <!--
+    Every platform package depends on the .Sources package at ONE EXACT version - the one built
+    beside it - so that a program always comes with its own source. NuGet writes a project
+    reference as "this version or later"; this turns the version of the .Sources reference into
+    the exact range [version].
+  -->
+  <Target Name="PinTailwindSourcesVersion" AfterTargets="_GetProjectReferenceVersions">
+    <ItemGroup>
+      <_TailwindSourcesReference Include="@(_ProjectReferencesWithVersions)"
+                                 Condition="'%(Filename)' == 'CodeBrix.WebPlatform.Styling.Tailwind4.Sources'" />
+      <_ProjectReferencesWithVersions Remove="@(_TailwindSourcesReference)" />
+      <_ProjectReferencesWithVersions Include="@(_TailwindSourcesReference)" ProjectVersion="[%(_TailwindSourcesReference.ProjectVersion)]" />
+    </ItemGroup>
+    <Error Condition="'@(_TailwindSourcesReference)' == ''" Text="The project reference to CodeBrix.WebPlatform.Styling.Tailwind4.Sources was not found; the package would not depend on its source." />
+
+    <!--
+      NuGet reads that version by evaluating the .Sources project again, and the version is
+      stamped from the clock, so a build that crosses a UTC minute boundary could name a .Sources
+      version that was never packed. Refuse to pack then, rather than publish a package whose
+      dependency cannot be found.
+    -->
+    <PropertyGroup>
+      <_TailwindSourcesVersion>@(_TailwindSourcesReference->'%(ProjectVersion)'->Replace('[', '')->Replace(']', ''))</_TailwindSourcesVersion>
+      <!-- NuGet names the file with the normalized version: a revision of 0 is dropped (1.0.327.0 -> 1.0.327). -->
+      <_TailwindSourcesFileVersion>$(_TailwindSourcesVersion)</_TailwindSourcesFileVersion>
+      <_TailwindSourcesFileVersion Condition="$(_TailwindSourcesVersion.Split('.').Length) == 4 And $(_TailwindSourcesVersion.EndsWith('.0'))">$(_TailwindSourcesVersion.Substring(0, $([MSBuild]::Subtract($(_TailwindSourcesVersion.Length), 2))))</_TailwindSourcesFileVersion>
+      <_TailwindSourcesPackage>$([System.IO.Path]::Combine('$(MSBuildThisFileDirectory)', 'CodeBrix.WebPlatform.Styling.Tailwind4.Sources', 'bin', '$(Configuration)', 'CodeBrix.WebPlatform.Styling.Tailwind4.Sources.$(_TailwindSourcesFileVersion).nupkg'))</_TailwindSourcesPackage>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(_TailwindSourcesPackage)')"
+           Text="This package would depend on CodeBrix.WebPlatform.Styling.Tailwind4.Sources $(_TailwindSourcesVersion), but that version was not packed ($(_TailwindSourcesPackage) does not exist) - the build crossed a minute boundary. Build again." />
+  </Target>
+
+</Project>

@@ -1,0 +1,17 @@
+<Project>
+
+  <!--
+    Packed into every CodeBrix.WebPlatform.Styling.Tailwind4.<Platform> package as
+    buildTransitive/<package id>.targets. It copies the Tailwind program that ships in the package
+    (tools/tailwind/<rid>/: tailwindcss or tailwindcss.exe, LICENSE-Tailwind.txt and
+    THIRD-PARTY-NOTICES-Tailwind.txt) into the output folder of the project that references the
+    package - directly or through another package - as tailwind/<rid>/.
+  -->
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\tools\tailwind\**\*"
+          Link="tailwind\%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest"
+          Visible="false" />
+  </ItemGroup>
+
+</Project>

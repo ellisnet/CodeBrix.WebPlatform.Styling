@@ -94,6 +94,8 @@ public class HostProgram
             RedirectStandardError = true,
             UseShellExecute = false,
         };
+        //The program colours its output on Windows (and wherever CI is set) even when it is redirected; NO_COLOR keeps it plain text.
+        start.Environment["NO_COLOR"] = "1";
         foreach (var argument in arguments)
         {
             start.ArgumentList.Add(argument);
